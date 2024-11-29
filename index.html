@@ -73,6 +73,23 @@
             text-align: center;
             color: #666;
         }
+        .rates-table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 600px;
+        }
+        .rates-table th, .rates-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .rates-table th {
+            background-color: #f5f5f5;
+        }
+        .rates-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
         .update-time {
             color: #666;
             font-size: 0.9em;
@@ -104,21 +121,32 @@
             margin-top: 10px;
             color: #666;
         }
+        .rate-type-selector {
+            text-align: center;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>AKZ Währungsrechner</h1>
         <div class="converter">
+            <div class="rate-type-selector">
+                <label>Kurstyp:</label>
+                <select id="rateType" onchange="updateConversion()">
+                    <option value="official">Offizieller Kurs</option>
+                    <option value="kinguila">Kinguila (Straßenkurs)</option>
+                </select>
+            </div>
             <div class="input-group">
-                <input type="number" id="amount" placeholder="Betrag eingeben">
-                <select id="fromCurrency">
+                <input type="number" id="amount" placeholder="Betrag eingeben" onchange="updateConversion()">
+                <select id="fromCurrency" onchange="updateConversion()">
                     <option value="AKZ">AKZ</option>
                     <option value="EUR">EUR</option>
                     <option value="USD">USD</option>
                 </select>
                 <span>zu</span>
-                <select id="toCurrency">
+                <select id="toCurrency" onchange="updateConversion()">
                     <option value="EUR">EUR</option>
                     <option value="USD">USD</option>
                     <option value="AKZ">AKZ</option>
@@ -129,7 +157,27 @@
                 Ergebnis wird hier angezeigt
             </div>
             <div class="rates" id="rates">
-                <p>Aktuelle Wechselkurse werden geladen...</p>
+                <table class="rates-table">
+                    <thead>
+                        <tr>
+                            <th>Währung</th>
+                            <th>Offizieller Kurs</th>
+                            <th>Kinguila Kurs</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ratesBody">
+                        <tr>
+                            <td>EUR/AKZ</td>
+                            <td>Wird geladen...</td>
+                            <td>Wird geladen...</td>
+                        </tr>
+                        <tr>
+                            <td>USD/AKZ</td>
+                            <td>Wird geladen...</td>
+                            <td>Wird geladen...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="update-time" id="updateTime"></div>
             <div class="loading" id="loading">Aktualisiere Wechselkurse...</div>
@@ -142,20 +190,39 @@
 
     <script>
         let rates = {
-            'AKZ': {
-                'EUR': 1/890,
-                'USD': 1/830,
-                'AKZ': 1
+            official: {
+                'AKZ': {
+                    'EUR': 1/890,
+                    'USD': 1/830,
+                    'AKZ': 1
+                },
+                'EUR': {
+                    'AKZ': 890,
+                    'USD': 1.07,
+                    'EUR': 1
+                },
+                'USD': {
+                    'AKZ': 830,
+                    'EUR': 1/1.07,
+                    'USD': 1
+                }
             },
-            'EUR': {
-                'AKZ': 890,
-                'USD': 1.07,
-                'EUR': 1
-            },
-            'USD': {
-                'AKZ': 830,
-                'EUR': 1/1.07,
-                'USD': 1
+            kinguila: {
+                'AKZ': {
+                    'EUR': 1/920,
+                    'USD': 1/850,
+                    'AKZ': 1
+                },
+                'EUR': {
+                    'AKZ': 920,
+                    'USD': 1.07,
+                    'EUR': 1
+                },
+                'USD': {
+                    'AKZ': 850,
+                    'EUR': 1/1.07,
+                    'USD': 1
+                }
             }
         };
 
@@ -183,12 +250,18 @@
         }
 
         function updateRatesDisplay() {
-            const ratesDiv = document.getElementById('rates');
-            ratesDiv.innerHTML = `
-                <p>Aktuelle Wechselkurse:</p>
-                <p>1 EUR ≈ ${rates.EUR.AKZ.toFixed(2)} AKZ</p>
-                <p>1 USD ≈ ${rates.USD.AKZ.toFixed(2)} AKZ</p>
-                <p>1 EUR ≈ ${rates.EUR.USD.toFixed(2)} USD</p>
+            const ratesBody = document.getElementById('ratesBody');
+            ratesBody.innerHTML = `
+                <tr>
+                    <td>EUR/AKZ</td>
+                    <td>${rates.official.EUR.AKZ.toFixed(2)}</td>
+                    <td>${rates.kinguila.EUR.AKZ.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>USD/AKZ</td>
+                    <td>${rates.official.USD.AKZ.toFixed(2)}</td>
+                    <td>${rates.kinguila.USD.AKZ.toFixed(2)}</td>
+                </tr>
             `;
         }
 
@@ -196,20 +269,28 @@
             const amount = parseFloat(document.getElementById('amount').value);
             const fromCurrency = document.getElementById('fromCurrency').value;
             const toCurrency = document.getElementById('toCurrency').value;
+            const rateType = document.getElementById('rateType').value;
             
             if (isNaN(amount)) {
                 document.getElementById('result').innerHTML = 'Bitte geben Sie einen gültigen Betrag ein';
                 return;
             }
 
-            const result = amount * rates[fromCurrency][toCurrency];
+            const result = amount * rates[rateType][fromCurrency][toCurrency];
             const formattedResult = new Intl.NumberFormat('de-DE', {
                 maximumFractionDigits: 2,
                 minimumFractionDigits: 2
             }).format(result);
 
             document.getElementById('result').innerHTML = 
-                `${amount} ${fromCurrency} = ${formattedResult} ${toCurrency}`;
+                `${amount} ${fromCurrency} = ${formattedResult} ${toCurrency} (${rateType === 'official' ? 'Offizieller Kurs' : 'Kinguila Kurs'})`;
+        }
+
+        function updateConversion() {
+            const amount = document.getElementById('amount').value;
+            if (amount) {
+                convert();
+            }
         }
 
         // Initialisierung
