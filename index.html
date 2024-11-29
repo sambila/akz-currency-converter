@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKZ Währungsrechner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .converter {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 200px;
+            font-size: 16px;
+        }
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+        }
+        .rates {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AKZ Währungsrechner</h1>
+        <div class="converter">
+            <div class="input-group">
+                <input type="number" id="amount" placeholder="Betrag eingeben">
+                <select id="fromCurrency">
+                    <option value="AKZ">AKZ</option>
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                </select>
+                <span>zu</span>
+                <select id="toCurrency">
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                    <option value="AKZ">AKZ</option>
+                </select>
+                <button onclick="convert()">Umrechnen</button>
+            </div>
+            <div class="result" id="result">
+                Ergebnis wird hier angezeigt
+            </div>
+            <div class="rates">
+                <p>Ungefähre Wechselkurse (Stand: November 2024):</p>
+                <p>1 EUR ≈ 890 AKZ</p>
+                <p>1 USD ≈ 830 AKZ</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rates = {
+            'AKZ': {
+                'EUR': 1/890,
+                'USD': 1/830,
+                'AKZ': 1
+            },
+            'EUR': {
+                'AKZ': 890,
+                'USD': 1.07,
+                'EUR': 1
+            },
+            'USD': {
+                'AKZ': 830,
+                'EUR': 1/1.07,
+                'USD': 1
+            }
+        };
+
+        function convert() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const fromCurrency = document.getElementById('fromCurrency').value;
+            const toCurrency = document.getElementById('toCurrency').value;
+            
+            if (isNaN(amount)) {
+                document.getElementById('result').innerHTML = 'Bitte geben Sie einen gültigen Betrag ein';
+                return;
+            }
+
+            const result = amount * rates[fromCurrency][toCurrency];
+            const formattedResult = new Intl.NumberFormat('de-DE', {
+                maximumFractionDigits: 2,
+                minimumFractionDigits: 2
+            }).format(result);
+
+            document.getElementById('result').innerHTML = 
+                `${amount} ${fromCurrency} = ${formattedResult} ${toCurrency}`;
+        }
+    </script>
+</body>
+</html>
